@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "505736185622",
+    "project_id": "girls-paradise-e720f",
+    "storage_bucket": "girls-paradise-e720f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505736185622:android:b77d18c1c80463b682b237",
+        "android_client_info": {
+          "package_name": "com.girlsparadise.shoppingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuCuUchpaxYe-J4yy2uBeFtuSAKQ634Vw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,163 +1,9 @@
-// import 'package:creation_edge/screens/home/bottomNavbbar.dart';
-// import 'package:http/http.dart' as http;
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
-// import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-//
-// import '../../utils/constance.dart';
-// import '../youtube/youtube_screens.dart';
-//
-//
-//
-// class ApiService {
-//
-//
-//   Future<List<VideoModel>> fetchVideos() async {
-//     try {
-//       final response = await http.get(Uri.parse('${baseUrl}videos'));
-//
-//       if (response.statusCode == 200) {
-//         final jsonData = json.decode(response.body);
-//         if (jsonData['success'] == true && jsonData['data'] != null) {
-//           return (jsonData['data'] as List)
-//               .map((video) => VideoModel.fromJson(video))
-//               .toList();
-//         }
-//       }
-//       throw Exception('Failed to load videos');
-//     } catch (e) {
-//       throw Exception('Error fetching videos: $e');
-//     }
-//   }
-// }
-//
-// // youtube_screens.dart
-//
-//
-// class DrawerYoutube extends StatefulWidget {
-//   const DrawerYoutube({super.key});
-//
-//   @override
-//   State<DrawerYoutube> createState() => _DrawerYoutubeState();
-// }
-//
-// class _DrawerYoutubeState extends State<DrawerYoutube> {
-//   final ApiService _apiService = ApiService();
-//   List<VideoModel> _videos = [];
-//   List<YoutubePlayerController> _controllers = [];
-//   bool _isLoading = true;
-//   String? _error;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadVideos();
-//   }
-//
-//   Future<void> _loadVideos() async {
-//     try {
-//       final videos = await _apiService.fetchVideos();
-//       final controllers = videos.map((video) {
-//         return YoutubePlayerController(
-//           initialVideoId: video.videoId,
-//           flags: const YoutubePlayerFlags(
-//             autoPlay: false,
-//             mute: false,
-//           ),
-//         );
-//       }).toList();
-//
-//       setState(() {
-//         _videos = videos;
-//         _controllers = controllers;
-//         _isLoading = false;
-//       });
-//     } catch (e) {
-//       setState(() {
-//         _error = e.toString();
-//         _isLoading = false;
-//       });
-//     }
-//   }
-//
-//   @override
-//   void dispose() {
-//     for (var controller in _controllers) {
-//       controller.dispose();
-//     }
-//     super.dispose();
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.grey[100],
-//       appBar: AppBar(
-//         surfaceTintColor: Colors.white,
-//         iconTheme: IconThemeData(color: Colors.black),
-//         backgroundColor: Colors.white,
-//         elevation: 3,
-//         title: Text("Video",style: TextStyle(fontSize: 16,color: Colors.black),),
-//       ),
-//       body: _isLoading
-//           ?       Center(child: CircularProgressIndicator(),)
-//           : _error != null
-//           ? Center(
-//         child: ListView(
-//           shrinkWrap: true,
-//           primary: false,
-//           children: [
-//             Text('Error: $_error'),
-//             ElevatedButton(
-//               onPressed: _loadVideos,
-//               child: const Text('Retry'),
-//             ),
-//           ],
-//         ),
-//       )
-//           : ListView(
-//         shrinkWrap: true,
-//         primary: false,
-//         children: [
-//           RefreshIndicator(
-//             onRefresh: _loadVideos,
-//             child: ListView.builder(
-//               shrinkWrap: true,
-//               primary: false,
-//               padding: const EdgeInsets.all(16),
-//               itemCount: _controllers.length,
-//               itemBuilder: (context, index) {
-//                 return Padding(
-//                   padding: const EdgeInsets.only(left: 8,right: 8,bottom: 2,top: 2),
-//                   child: ClipRRect(
-//                     borderRadius: BorderRadius.circular(10),
-//                     child: YoutubePlayer(
-//                       controller: _controllers[index],
-//                       showVideoProgressIndicator: true,
-//                       progressIndicatorColor: Colors.red,
-//                       progressColors: const ProgressBarColors(
-//                         playedColor: Colors.red,
-//                         handleColor: Colors.redAccent,
-//                       ),
-//                     ),
-//                   ),
-//                 );
-//               },
-//             ),
-//           ),
-//           const BottomNavBar(),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:creation_edge/screens/home/bottomNavbbar.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../utils/constance.dart';
 
 class VideoModel {
@@ -216,7 +62,6 @@ class ApiService {
   }
 }
 
-
 class DrawerYoutube extends StatefulWidget {
   const DrawerYoutube({super.key});
 
@@ -247,11 +92,17 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
 
       final videos = await _apiService.fetchVideos();
       for (var controller in _controllers) {
-        controller.close();
+        controller.dispose();
       }
+
       final controllers = videos.map((video) {
-        return YoutubePlayerController.fromVideoId(
-          videoId: video.videoId,
+        return YoutubePlayerController(
+          initialVideoId: video.videoId,
+          flags: const YoutubePlayerFlags(
+            autoPlay: false,
+            mute: false,
+            enableCaption: true,
+          ),
         );
       }).toList();
 
@@ -272,9 +123,10 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: YoutubePlayer(
-        enableFullScreenOnVerticalDrag: false,
-        aspectRatio: 16/9,
         controller: controller,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: Colors.red,
+        aspectRatio: 16 / 9,
       ),
     );
   }
@@ -282,16 +134,17 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
   @override
   void dispose() {
     for (var controller in _controllers) {
-      controller.close();
+      controller.dispose();
     }
     _scrollController.dispose();
     super.dispose();
   }
+
   Widget buildProductGridShimmer() {
     return ListView.builder(
       shrinkWrap: true,
       primary: false,
-      itemCount: 10, // Number of shimmer rows
+      itemCount: 10,
       itemBuilder: (_, index) {
         return Padding(
           padding: const EdgeInsets.only(left: 4.0, right: 4),
@@ -302,7 +155,7 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
                 highlightColor: Colors.grey[100]!,
                 child: Container(
                   height: 180,
-                  margin: EdgeInsets.all(4),
+                  margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -315,19 +168,20 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         surfaceTintColor: Colors.white,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         elevation: 3,
-        title: Text("Video",style: TextStyle(fontSize: 16,color: Colors.black),),
+        title: const Text("Video", style: TextStyle(fontSize: 16, color: Colors.black)),
       ),
       body: _isLoading
-          ?  buildProductGridShimmer()
+          ? buildProductGridShimmer()
           : _error != null
           ? Center(
         child: Column(
@@ -350,14 +204,12 @@ class _DrawerYoutubeState extends State<DrawerYoutube> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 8.0,right: 8,bottom: 8,top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_videos.isEmpty)
-                      const Center(
-                        child: Text('No videos available'),
-                      )
+                      const Center(child: Text('No videos available'))
                     else
                       ...List.generate(
                         _videos.length,

@@ -11,8 +11,6 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'dart:convert';
-
-import '../Auth/auth_screen.dart';
 import '../Auth/profile_auth.dart';
 import '../utils/local_store.dart';
 
@@ -43,16 +41,16 @@ class _TabProfileState extends State<TabProfile> {
       });
 
       final dashboardResponse =
-          await http.get(Uri.parse(dashboardUrl), headers: {
+      await http.get(Uri.parse(dashboardUrl), headers: {
         'Authorization': 'Bearer ${accessToken}',
       });
 
       if (profileResponse.statusCode == 200 &&
           dashboardResponse.statusCode == 200) {
         final Map<String, dynamic> profileJson =
-            json.decode(profileResponse.body);
+        json.decode(profileResponse.body);
         final Map<String, dynamic> dashboardJson =
-            json.decode(dashboardResponse.body);
+        json.decode(dashboardResponse.body);
 
         setState(() {
           userData = profileJson['user']['data'];
@@ -91,30 +89,30 @@ class _TabProfileState extends State<TabProfile> {
               },
               child: Container(
                 child: userData!['banner'] != null &&
-                        userData!['banner'].isNotEmpty
+                    userData!['banner'].isNotEmpty
                     ? Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          image: DecorationImage(
-                            image: NetworkImage(
-                                "${ImagebaseUrl}${userData!['banner']}"),
-                            fit: BoxFit.fill,
-                            onError: (exception, stackTrace) =>
-                                Image.asset("assets/images/appbarlogo.png"),
-                          ),
-                        ),
-                      )
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    image: DecorationImage(
+                      image: NetworkImage(
+                          "${ImagebaseUrl}${userData!['banner']}"),
+                      fit: BoxFit.fill,
+                      onError: (exception, stackTrace) =>
+                          Image.asset("assets/images/appbarlogo.png"),
+                    ),
+                  ),
+                )
                     : Container(
-                        decoration: const BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage("assets/images/appbarlogo.png"),
-                            fit: BoxFit.fill,
-                            alignment: Alignment.center,
-                          ),
-                        ),
-                      ),
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/appbarlogo.png"),
+                      fit: BoxFit.fill,
+                      alignment: Alignment.center,
+                    ),
+                  ),
+                ),
               ),
             ),
             Positioned(
@@ -132,7 +130,7 @@ class _TabProfileState extends State<TabProfile> {
                   radius: 50,
                   backgroundColor: Colors.grey[400],
                   backgroundImage:
-                      NetworkImage("${ImagebaseUrl}${userData!['photo']}",),
+                  NetworkImage("${ImagebaseUrl}${userData!['photo']}",),
                 ),
               ),
             ),
@@ -326,14 +324,14 @@ class _TabProfileState extends State<TabProfile> {
           height: 170,
           width: double.infinity,
           child:
-              _buildDashboardCard("Complete", dashboardData?['completed'] ?? 0),
+          _buildDashboardCard("Complete", dashboardData?['completed'] ?? 0),
         ),
         const SizedBox(height: 20),
         SizedBox(
           height: 170,
           width: double.infinity,
           child:
-              _buildDashboardCard("Wishlist", dashboardData?['wishlist'] ?? 0),
+          _buildDashboardCard("Wishlist", dashboardData?['wishlist'] ?? 0),
         ),
         const SizedBox(height: 20),
         _buildAboutCard(),
@@ -372,64 +370,95 @@ class _TabProfileState extends State<TabProfile> {
       body: accessToken.isEmpty
           ? const ProfileAuth()
           : isLoading
-              ? Padding(
-                  padding: const EdgeInsets.only(left: 58.0, top: 111),
-                  child: LoadingAnimationWidget.progressiveDots(
-                      color: Color(0xFFdc1212), size: 30),
-                )
-              : userData == null
-                  ? const Center(child: Text("Failed to load profile"))
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        await fetchProfileData();
-                      },
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _buildProfileHeader(),
-                            const SizedBox(height: 16),
-                            _buildNavigation(),
-                            const SizedBox(height: 16),
-                            _buildContent(),
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 18.0, right: 18),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  if (accessToken.isNotEmpty) {
-                                    setAccessToken("");
-                                    await logout();
-                                  }
-                                },
-                                child: Center(
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    height: 50,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFdc1212),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Text(
-                                      "Logout",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const BottomNavBar(),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
+          ? Padding(
+        padding: const EdgeInsets.only(left: 58.0, top: 111),
+        child: LoadingAnimationWidget.progressiveDots(
+            color: Color(0xFFdc1212), size: 30),
+      )
+          : userData == null
+          ? const Center(child: Text("Failed to load profile"))
+          : RefreshIndicator(
+        onRefresh: () async {
+          await fetchProfileData();
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildProfileHeader(),
+              const SizedBox(height: 16),
+              _buildNavigation(),
+              const SizedBox(height: 16),
+              _buildContent(),
+              const SizedBox(height: 20),
+              Padding(
+                padding:
+                const EdgeInsets.only(left: 18.0, right: 18),
+                child: GestureDetector(
+                  onTap: () async {
+                    if (accessToken.isNotEmpty) {
+                      setAccessToken("");
+                      await logout();
+                    }
+                  },
+                  child: Center(
+                    child: Container(
+                      alignment: Alignment.center,
+                      height: 50,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFdc1212),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "Logout",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white),
                       ),
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding:
+                const EdgeInsets.only(left: 18.0, right: 18),
+                child: GestureDetector(
+                  onTap: () async {
+                    if (accessToken.isNotEmpty) {
+                      setAccessToken("");
+                      await logout();
+                    }
+                  },
+                  child: Center(
+                    child: Container(
+                      alignment: Alignment.center,
+                      height: 50,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFdc1212),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        "Delete Account",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const BottomNavBar(),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

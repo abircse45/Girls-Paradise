@@ -6,7 +6,6 @@ import 'package:creation_edge/utils/constance.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'firebase_options.dart';
 import 'messaging/firebase_messaging.dart';
 import 'notifications/pushNotifyAppbarScreen.dart';
 
@@ -17,9 +16,7 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<Scaffol
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initiateAccessToken();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp();
   final fcmService = FirebaseMessagingService();
   await fcmService.initialize(navigatorKey); // Pass navigatorKey to the service
   await fcmService.subscribeToTopic("all_devices");

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:creation_edge/screens/home/bottomNavbbar.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../utils/constance.dart';
 
 class VideoModel {
@@ -29,13 +29,14 @@ class VideoModel {
   }
 
   String get videoId {
-    final uri = Uri.parse(link);
+    final uri = Uri.tryParse(link);
+    if (uri == null) throw Exception("Invalid URL");
     final queryParams = uri.queryParameters;
     if (uri.pathSegments.contains('embed')) {
       return uri.pathSegments.last;
     } else if (queryParams.containsKey('v')) {
       return queryParams['v']!;
-    } else if (uri.pathSegments.length > 1) {
+    } else if (uri.pathSegments.isNotEmpty) {
       return uri.pathSegments.last;
     }
     throw Exception('Could not extract video ID from: $link');
@@ -61,7 +62,6 @@ class ApiService {
     }
   }
 }
-
 
 class YoutubeScreens extends StatefulWidget {
   const YoutubeScreens({super.key});
@@ -92,12 +92,23 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
       });
 
       final videos = await _apiService.fetchVideos();
+
       for (var controller in _controllers) {
-        controller.close();
+        controller.dispose();
       }
+
       final controllers = videos.map((video) {
-        return YoutubePlayerController.fromVideoId(
-          videoId: video.videoId,
+        final videoId = YoutubePlayer.convertUrlToId(video.link);
+        if (videoId == null) {
+          throw Exception('Invalid YouTube link: ${video.link}');
+        }
+        return YoutubePlayerController(
+          initialVideoId: videoId,
+          flags: const YoutubePlayerFlags(
+            autoPlay: false,
+            mute: false,
+            enableCaption: true,
+          ),
         );
       }).toList();
 
@@ -118,9 +129,10 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: YoutubePlayer(
-        enableFullScreenOnVerticalDrag: false,
-        aspectRatio: 16/9,
         controller: controller,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: Colors.red,
+        aspectRatio: 16 / 9,
       ),
     );
   }
@@ -128,16 +140,17 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
   @override
   void dispose() {
     for (var controller in _controllers) {
-      controller.close();
+      controller.dispose();
     }
     _scrollController.dispose();
     super.dispose();
   }
+
   Widget buildProductGridShimmer() {
     return ListView.builder(
       shrinkWrap: true,
       primary: false,
-      itemCount: 10, // Number of shimmer rows
+      itemCount: 10,
       itemBuilder: (_, index) {
         return Padding(
           padding: const EdgeInsets.only(left: 4.0, right: 4),
@@ -148,7 +161,7 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
                 highlightColor: Colors.grey[100]!,
                 child: Container(
                   height: 180,
-                  margin: EdgeInsets.all(4),
+                  margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -161,12 +174,13 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _isLoading
-          ?  buildProductGridShimmer()
+          ? buildProductGridShimmer()
           : _error != null
           ? Center(
         child: Column(
@@ -189,14 +203,12 @@ class _YoutubeScreensState extends State<YoutubeScreens> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 8.0,right: 8,bottom: 8,top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_videos.isEmpty)
-                      const Center(
-                        child: Text('No videos available'),
-                      )
+                      const Center(child: Text('No videos available'))
                     else
                       ...List.generate(
                         _videos.length,

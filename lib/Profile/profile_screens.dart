@@ -10,11 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../fullView/image_full_view.dart';
+import '../utils/local_store.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -41,10 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: double.infinity,
                 color: Colors.grey[300],
                 child: userData.userData.value!['banner'] != null &&
-                        userData.userData.value!['banner'].isNotEmpty
+                    userData.userData.value!['banner'].isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl: "${ImagebaseUrl}${userData.userData.value!['banner']}",
-                        fit: BoxFit.fill)
+                    imageUrl: "${ImagebaseUrl}${userData.userData.value!['banner']}",
+                    fit: BoxFit.fill)
                     : Image.asset("assets/images/appbarlogo.png"),
               ),
             ),
@@ -54,13 +53,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: CircleAvatar(
                 radius: 50,
                 backgroundImage: userData.userData.value!['photo'] != null &&
-                        userData.userData.value!['photo'].isNotEmpty
+                    userData.userData.value!['photo'].isNotEmpty
                     ? NetworkImage(
-                        "${ImagebaseUrl}${userData.userData.value!['photo']}")
+                    "${ImagebaseUrl}${userData.userData.value!['photo']}")
                     : null,
                 backgroundColor: Colors.grey[400],
                 child: userData.userData.value!['photo'] == null ||
-                        userData.userData.value!['photo'].isEmpty
+                    userData.userData.value!['photo'].isEmpty
                     ? const Icon(Icons.person, size: 40, color: Colors.white)
                     : null,
               ),
@@ -283,7 +282,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return _buildDashboardContent();
     }
   }
-
+  Future logout() async {
+    var response = await http.post(
+        Uri.parse("https://girlsparadisebd.com/api/v1/auth/logout"),
+        headers: {"Authorization": "Bearer $accessToken"});
+    if (response.statusCode == 200) {
+      setState(() {
+        Get.offAll(const HomeScreens(), transition: Transition.noTransition);
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -307,20 +315,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return profileController.userData.value == null
               ? const Center(child: Text("Failed to load profile"))
               : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _buildProfileHeader(profileController),
-                      const SizedBox(height: 16),
-                      _buildNavigation(),
-                      const SizedBox(height: 16),
-                      _buildContent(),
-                      const SizedBox(height: 20),
-                      const BottomNavBar(),
-                      const SizedBox(height: 20),
-                    ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildProfileHeader(profileController),
+                const SizedBox(height: 16),
+                _buildNavigation(),
+                const SizedBox(height: 16),
+                _buildContent(),
+
+                const SizedBox(height: 20),
+                Padding(
+                  padding:
+                  const EdgeInsets.only(left: 18.0, right: 18),
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (accessToken.isNotEmpty) {
+                        setAccessToken("");
+                        await logout();
+                      }
+                    },
+                    child: Center(
+                      child: Container(
+                        alignment: Alignment.center,
+                        height: 50,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFdc1212),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          "Logout",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ),
-                );
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding:
+                  const EdgeInsets.only(left: 18.0, right: 18),
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (accessToken.isNotEmpty) {
+                        setAccessToken("");
+                        await logout();
+                      }
+                    },
+                    child: Center(
+                      child: Container(
+                        alignment: Alignment.center,
+                        height: 50,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFdc1212),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          "Delete Account",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const BottomNavBar(),
+                const SizedBox(height: 20),
+              ],
+            ),
+          );
         }
       }),
     );

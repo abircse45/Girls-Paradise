@@ -30,7 +30,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:playx_version_update/playx_version_update.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../Auth/auth_screen.dart';
@@ -71,105 +70,18 @@ class _HomeScreensState extends State<HomeScreens>
   bool _isLoading = true;
   bool _isAppPublishedOnAppStore = false;
 
-  StreamSubscription<PlayxDownloadInfo?>? _downloadInfoStreamSubscription;
 
   @override
   void dispose() {
     _tabController.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    _downloadInfoStreamSubscription?.cancel();
+
     super.dispose();
   }
 
-  Future<void> _checkVersion() async {
-    final isIOS = Platform.isIOS;
 
-    // Skip iOS check if not published on App Store
-    if (isIOS && !_isAppPublishedOnAppStore) {
-      log('Skipping iOS version check - app not published');
-      return;
-    }
 
-    final result = await PlayxVersionUpdate.checkVersion(
-      localVersion: _appVersion,
-      forceUpdate: true, // Set to true for mandatory updates
-      googlePlayId: 'com.girlsparadise.shoppingapp',
-      appStoreId: isIOS ? 'com.girlsparadise.shoppingapp' : null,
-      country: 'bn',
-      language: 'en',
-    );
 
-    result.when(
-      success: (info) {
-        if (info.canUpdate) {
-          _showUpdateDialog(info);
-        }
-      },
-      error: (error) {
-        log('Version check error: ${error.message}');
-        // Retry after delay if failed
-        Future.delayed(const Duration(seconds: 30), _checkVersion);
-      },
-    );
-  }
-  void _showUpdateDialog(PlayxVersionUpdateInfo info) {
-    showDialog(
-      context: context,
-      barrierDismissible: !info.forceUpdate,
-      builder: (context) => PlayxUpdateDialog(
-        versionUpdateInfo: info,
-        title: (info) => info.forceUpdate
-            ? 'Update Required'
-            : 'New Update Available',
-        description: (info) => info.forceUpdate
-            ? 'You must update to continue using the app'
-            : 'A new version is available with improvements',
-        releaseNotesTitle: (info) => 'What\'s New',
-        showReleaseNotes: true,
-        updateActionTitle: 'Update Now',
-        dismissActionTitle: info.forceUpdate ? null : 'Later',
-        isDismissible: !info.forceUpdate,
-      ),
-    );
-  }
-  void _listenToFlexibleDownloadUpdates() {
-    _downloadInfoStreamSubscription = PlayxVersionUpdate
-        .listenToFlexibleDownloadUpdate()
-        .listen((info) {
-      if (info?.status == PlayxDownloadStatus.downloaded) {
-        _showInstallPrompt();
-      }
-    });
-  }
-
-  void _showInstallPrompt() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Update ready to install!'),
-        action: SnackBarAction(
-          label: 'INSTALL',
-          onPressed: () => PlayxVersionUpdate.completeFlexibleUpdate(),
-        ),
-        duration: const Duration(days: 1), // Persistent until installed
-      ),
-    );
-  }
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkPendingUpdate();
-    }
-  }
-
-  Future<void> _checkPendingUpdate() async {
-    final result = await PlayxVersionUpdate.isFlexibleUpdateNeedToBeInstalled();
-    result.when(
-      success: (needsInstall) {
-        if (needsInstall) _showInstallPrompt();
-      },
-      error: (error) => log(error.message),
-    );
-  }
 
 
 
@@ -202,7 +114,6 @@ class _HomeScreensState extends State<HomeScreens>
     _tabController = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addObserver(this);
     _initPackageInfo();
-    _setupVersionUpdate();
     loadCartCount();
     loadSavedStates();
     profileController.fetchProfileData();
@@ -225,12 +136,7 @@ class _HomeScreensState extends State<HomeScreens>
     setState(() => _appVersion = info.version);
   }
 
-  void _setupVersionUpdate() {
-    _listenToFlexibleDownloadUpdates();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(seconds: 3), _checkVersion);
-    });
-  }
+
 
 
   Future<void> loadCartCount() async {
@@ -1311,84 +1217,205 @@ class _HomeScreensState extends State<HomeScreens>
                                         ),
                                       ),
                                       const SizedBox(height: 10),
-                                      ListView.builder(
-                                        shrinkWrap: true,
-                                        primary: false,
-                                        itemCount: (bestSellingController
-                                            .products
-                                            ?.data
-                                            ?.length ??
-                                            0) ~/
-                                            2 +
-                                            (bestSellingController.products
-                                                ?.data?.length ??
-                                                0) %
-                                                2,
-                                        itemBuilder: (_, index) {
-                                          // Calculate indices for two items in each row
-                                          final firstItemIndex = index * 2;
-                                          final secondItemIndex =
-                                              firstItemIndex + 1;
+                                      // ListView.builder(
+                                      //   shrinkWrap: true,
+                                      //   primary: false,
+                                      //   itemCount: (bestSellingController
+                                      //       .products
+                                      //       ?.data
+                                      //       ?.length ??
+                                      //       0) ~/
+                                      //       2 +
+                                      //       (bestSellingController.products
+                                      //           ?.data?.length ??
+                                      //           0) %
+                                      //           2,
+                                      //   itemBuilder: (_, index) {
+                                      //     // Calculate indices for two items in each row
+                                      //     final firstItemIndex = index * 2;
+                                      //     final secondItemIndex =
+                                      //         firstItemIndex + 1;
+                                      //
+                                      //     return Row(
+                                      //       children: [
+                                      //         // First item
+                                      //         Expanded(
+                                      //           child: GestureDetector(
+                                      //             onTap: () {
+                                      //               Get.to(
+                                      //                 ProductDetails(
+                                      //                     id: bestSellingController
+                                      //                         .products
+                                      //                         ?.data?[
+                                      //                     firstItemIndex]
+                                      //                         ?.id),
+                                      //                 transition: Transition
+                                      //                     .noTransition,
+                                      //               );
+                                      //             },
+                                      //             child: _buildNewItemCard(
+                                      //                 bestSellingController
+                                      //                     .products!.data![
+                                      //                 firstItemIndex]!),
+                                      //           ),
+                                      //         ),
+                                      //         const SizedBox(
+                                      //             width:
+                                      //             8), // Spacing between items
+                                      //         // Second item (if exists)
+                                      //         Expanded(
+                                      //           child: secondItemIndex <
+                                      //               (bestSellingController
+                                      //                   .products
+                                      //                   ?.data
+                                      //                   ?.length ??
+                                      //                   0)
+                                      //               ? GestureDetector(
+                                      //             onTap: () {
+                                      //               Get.to(
+                                      //                 ProductDetails(
+                                      //                     id: bestSellingController
+                                      //                         .products
+                                      //                         ?.data?[
+                                      //                     secondItemIndex]
+                                      //                         ?.id),
+                                      //                 transition: Transition
+                                      //                     .noTransition,
+                                      //               );
+                                      //             },
+                                      //             child: _buildNewItemCard(
+                                      //                 bestSellingController
+                                      //                     .products!
+                                      //                     .data![
+                                      //                 secondItemIndex]!),
+                                      //           )
+                                      //               : Container(), // Empty container for odd number of items
+                                      //         ),
+                                      //       ],
+                                      //     );
+                                      //   },
+                                      // ),
+                                      Obx(() {
+                                        if (bestSellingController.isLoading &&
+                                            bestSellingController
+                                                .displayedProducts.isEmpty) {
+                                          return const Center(
+                                              child:
+                                              CircularProgressIndicator());
+                                        }
 
-                                          return Row(
-                                            children: [
-                                              // First item
-                                              Expanded(
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    Get.to(
-                                                      ProductDetails(
-                                                          id: bestSellingController
-                                                              .products
-                                                              ?.data?[
-                                                          firstItemIndex]
-                                                              ?.id),
-                                                      transition: Transition
-                                                          .noTransition,
-                                                    );
-                                                  },
-                                                  child: _buildNewItemCard(
-                                                      bestSellingController
-                                                          .products!.data![
-                                                      firstItemIndex]!),
+                                        return Column(
+                                          children: [
+                                            ListView.builder(
+                                              shrinkWrap: true,
+                                              primary: false,
+                                              itemCount: (bestSellingController
+                                                  .displayedProducts
+                                                  .length ~/
+                                                  2) +
+                                                  (bestSellingController
+                                                      .displayedProducts
+                                                      .length %
+                                                      2),
+                                              itemBuilder: (_, index) {
+                                                final firstItemIndex =
+                                                    index * 2;
+                                                final secondItemIndex =
+                                                    firstItemIndex + 1;
+
+                                                return Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          Get.to(
+                                                            ProductDetails(
+                                                              id: bestSellingController
+                                                                  .displayedProducts[
+                                                              firstItemIndex]
+                                                                  .id,
+                                                            ),
+                                                            transition: Transition
+                                                                .noTransition,
+                                                          );
+                                                        },
+                                                        child:
+                                                        _buildNewItemCard(
+                                                          bestSellingController
+                                                              .displayedProducts[
+                                                          firstItemIndex],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: secondItemIndex <
+                                                          bestSellingController
+                                                              .displayedProducts
+                                                              .length
+                                                          ? GestureDetector(
+                                                        onTap: () {
+                                                          Get.to(
+                                                            ProductDetails(
+                                                              id: bestSellingController
+                                                                  .displayedProducts[
+                                                              secondItemIndex]
+                                                                  .id,
+                                                            ),
+                                                            transition:
+                                                            Transition
+                                                                .noTransition,
+                                                          );
+                                                        },
+                                                        child:
+                                                        _buildNewItemCard(
+                                                          bestSellingController
+                                                              .displayedProducts[
+                                                          secondItemIndex],
+                                                        ),
+                                                      )
+                                                          : Container(),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                            if (bestSellingController
+                                                .hasMoreProducts) ...[
+                                              const SizedBox(height: 20),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  bestSellingController
+                                                      .fetchProducts();
+                                                },
+                                                child: Center(
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    height: 40,
+                                                    width: 180,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.indigo,
+                                                      borderRadius:
+                                                      BorderRadius.circular(
+                                                          10),
+                                                    ),
+                                                    child: const Text(
+                                                      "Load More",
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                        FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                              const SizedBox(
-                                                  width:
-                                                  8), // Spacing between items
-                                              // Second item (if exists)
-                                              Expanded(
-                                                child: secondItemIndex <
-                                                    (bestSellingController
-                                                        .products
-                                                        ?.data
-                                                        ?.length ??
-                                                        0)
-                                                    ? GestureDetector(
-                                                  onTap: () {
-                                                    Get.to(
-                                                      ProductDetails(
-                                                          id: bestSellingController
-                                                              .products
-                                                              ?.data?[
-                                                          secondItemIndex]
-                                                              ?.id),
-                                                      transition: Transition
-                                                          .noTransition,
-                                                    );
-                                                  },
-                                                  child: _buildNewItemCard(
-                                                      bestSellingController
-                                                          .products!
-                                                          .data![
-                                                      secondItemIndex]!),
-                                                )
-                                                    : Container(), // Empty container for odd number of items
-                                              ),
+                                              const SizedBox(height: 20),
                                             ],
-                                          );
-                                        },
-                                      ),
+                                          ],
+                                        );
+                                      }),
                                     ],
                                   ),
                                 ),

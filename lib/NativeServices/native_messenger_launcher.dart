@@ -1,31 +1,29 @@
-import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NativeMessengerLauncher {
-  static const MethodChannel _channel =
-  MethodChannel('com.girlsparadise.shoppingapp/messenger');
-
   static Future<bool> launchMessenger({String url = 'https://m.me/creationedges'}) async {
     try {
-      final bool result = await _channel.invokeMethod(
-        'launchMessenger',
-        {'url': url},
-      );
-      return result;
-    } on PlatformException catch (e) {
-      print("Failed to launch messenger: '${e.message}'.");
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Failed to launch messenger: $e");
       return false;
     }
   }
 
   static Future<bool> clickhere(Uri uri) async {
     try {
-      final bool result = await _channel.invokeMethod(
-        'openUrl',
-        {'url': uri.toString()},
-      );
-      return result;
-    } on PlatformException catch (e) {
-      print("Failed to open URL: '${e.message}'.");
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Failed to open URL: $e");
       return false;
     }
   }
@@ -36,19 +34,18 @@ class NativeMessengerLauncher {
   }) async {
     try {
       String url = 'https://wa.me/$phoneNumber';
-
-      // Add message if provided
       if (message.isNotEmpty) {
         url += '?text=${Uri.encodeFull(message)}';
       }
 
-      final bool result = await _channel.invokeMethod(
-        'openWhatsApp',
-        {'url': url},
-      );
-      return result;
-    } on PlatformException catch (e) {
-      print("Failed to open WhatsApp: '${e.message}'.");
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Failed to open WhatsApp: $e");
       return false;
     }
   }

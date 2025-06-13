@@ -1,12 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:creation_edge/utils/constance.dart';
 import 'package:flutter/material.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../NativeServices/native_messenger_launcher.dart';
-import '../screens/home/facebook_newsFeed.dart';
 
 class SingleFacebookNewsFeed extends StatefulWidget {
   final String id;
@@ -30,16 +29,32 @@ class _SingleFacebookNewsFeedState extends State<SingleFacebookNewsFeed> {
 
   @override
   void dispose() {
-    _youtubeController?.close();
+    _youtubeController?.dispose();
     super.dispose();
   }
 
-  Widget _buildVideoPlayer(String videoId) {
-    _youtubeController = YoutubePlayerController.fromVideoId(
-      videoId: videoId,
-      params: const YoutubePlayerParams(showFullscreenButton: true),
+  Widget _buildVideoPlayer(String link) {
+    final videoId = YoutubePlayer.convertUrlToId(link);
+    if (videoId == null) {
+      return const Text("Invalid YouTube link");
+    }
+
+    _youtubeController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+        enableCaption: true,
+        controlsVisibleAtStart: true,
+      ),
     );
-    return YoutubePlayer(controller: _youtubeController!);
+
+    return YoutubePlayer(
+      controller: _youtubeController!,
+      showVideoProgressIndicator: true,
+      progressIndicatorColor: Colors.red,
+      aspectRatio: 16 / 9,
+    );
   }
 
   @override
@@ -48,8 +63,9 @@ class _SingleFacebookNewsFeedState extends State<SingleFacebookNewsFeed> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          title: const Text('Blog')),
+        surfaceTintColor: Colors.white,
+        title: const Text('Blog'),
+      ),
       body: FutureBuilder<BlogPost>(
         future: _blogPostFuture,
         builder: (context, snapshot) {
@@ -108,13 +124,6 @@ class _SingleFacebookNewsFeedState extends State<SingleFacebookNewsFeed> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            // Text(
-                            //   blogPost.title ?? '',
-                            //   maxLines: 3,
-                            //   overflow: TextOverflow.ellipsis,
-                            //   style: const TextStyle(fontWeight: FontWeight.normal),
-                            // ),
                           ],
                         ),
                       ),
@@ -141,16 +150,15 @@ class _SingleFacebookNewsFeedState extends State<SingleFacebookNewsFeed> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                       Text(
-                        "${blogPost.title??""}",
-                        style: TextStyle(fontSize: 16),
+                      Text(
+                        "${blogPost.title ?? ""}",
+                        style: const TextStyle(fontSize: 16),
                       ),
                       GestureDetector(
                         onTap: () async {
                           if (blogPost.buttonLink != null) {
-                            await NativeMessengerLauncher.clickhere(Uri.parse(blogPost.buttonLink!));
-
-                            // clickhere(Uri.parse(blogPost.buttonLink!));
+                            await NativeMessengerLauncher.clickhere(
+                                Uri.parse(blogPost.buttonLink!));
                           }
                         },
                         child: Container(
@@ -182,7 +190,6 @@ class _SingleFacebookNewsFeedState extends State<SingleFacebookNewsFeed> {
       ),
     );
   }
-
 }
 
 class ApiService {

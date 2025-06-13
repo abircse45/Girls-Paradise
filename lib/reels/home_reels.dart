@@ -201,7 +201,7 @@ class _HomeReelsState extends State<HomeReels> {
             : _error != null
             ? Center(
             child: Text(_error!,
-                style: const TextStyle(color: Colors.white)))
+                style: const TextStyle(color: Colors.black)))
             : Stack(
           children: [
             PageView.builder(

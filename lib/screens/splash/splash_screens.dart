@@ -23,7 +23,7 @@ class _SplashScreensState extends State<SplashScreens> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[100],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -32,10 +32,10 @@ class _SplashScreensState extends State<SplashScreens> {
             ClipRRect(
               borderRadius: BorderRadius.circular(10.0),
               child: Image.asset(
-                "assets/images/logo2.png",
-                height: 150,
-                width: 150,
-                fit: BoxFit.cover,
+                "assets/images/logo_main.png",
+                height: 250,
+                // width: 150,
+                fit: BoxFit.fill,
               ),
             ),
             const SizedBox(height: 50),

@@ -94,7 +94,7 @@ class _PopularCategoriesState extends State<PopularCategories> {
             ),
           ),
           SizedBox(
-            height: 160,
+            height: 200,
             child: isLoading
                 ? Center(child: Container(height: 150,))
                 : error != null
@@ -153,11 +153,16 @@ class CategoryCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12),
-            Text(
-              category.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.only(left: 4.0,right: 4),
+              child: Text(
+                category.name,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
             SizedBox(height: 4),
