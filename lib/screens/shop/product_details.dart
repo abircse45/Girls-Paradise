@@ -1007,7 +1007,7 @@ class _ProductDetailsState extends State<ProductDetails>
                 ],
               ),
               SizedBox(
-                height: 250,
+                height: 350,
                 child: TabBarView(
                   controller: _tabController,
                   children: [

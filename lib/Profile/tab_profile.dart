@@ -37,33 +37,66 @@ class _TabProfileState extends State<TabProfile> {
 
     try {
       final profileResponse = await http.get(Uri.parse(apiUrl), headers: {
-        'Authorization': 'Bearer ${accessToken}',
+        'Authorization': 'Bearer $accessToken',
       });
+
+      print('Profile Response Status: ${profileResponse.statusCode}');
+      print('Profile Response Body: ${profileResponse.body}');
 
       final dashboardResponse =
       await http.get(Uri.parse(dashboardUrl), headers: {
-        'Authorization': 'Bearer ${accessToken}',
+        'Authorization': 'Bearer $accessToken',
       });
 
-      if (profileResponse.statusCode == 200 &&
-          dashboardResponse.statusCode == 200) {
+      print('Dashboard Response Status: ${dashboardResponse.statusCode}');
+      print('Dashboard Response Body: ${dashboardResponse.body}');
+
+      if (profileResponse.statusCode == 200) {
         final Map<String, dynamic> profileJson =
         json.decode(profileResponse.body);
-        final Map<String, dynamic> dashboardJson =
-        json.decode(dashboardResponse.body);
 
+        // Fixed: Access the nested data correctly
         setState(() {
           userData = profileJson['user']['data'];
-          dashboardData = dashboardJson['data'];
           isLoading = false;
         });
+
+        // Handle dashboard response separately (it might fail but profile should still work)
+        if (dashboardResponse.statusCode == 200) {
+          final Map<String, dynamic> dashboardJson =
+          json.decode(dashboardResponse.body);
+          setState(() {
+            dashboardData = dashboardJson['data'];
+          });
+        } else {
+          print("Dashboard API failed, but profile loaded successfully");
+          // Set default dashboard data
+          setState(() {
+            dashboardData = {
+              'pending': 0,
+              'processing': 0,
+              'cancelled': 0,
+              'completed': 0,
+              'wishlist': 0,
+            };
+          });
+        }
       } else {
-        throw Exception("Failed to load data");
+        print("Profile API failed with status: ${profileResponse.statusCode}");
+        throw Exception("Failed to load profile data");
       }
     } catch (error) {
+      print("Error fetching profile data: $error");
       setState(() {
         isLoading = false;
       });
+      // Show error message to user
+      // Get.snackbar(
+      //   "Error",
+      //   "Failed to load profile data. Please try again.",
+      //   backgroundColor: Colors.red,
+      //   colorText: Colors.white,
+      // );
     }
   }
 
@@ -81,36 +114,29 @@ class _TabProfileState extends State<TabProfile> {
           children: [
             GestureDetector(
               onTap: () {
-                Get.to(
-                    ImageFullView(
-                      image: userData!['banner'],
-                    ),
-                    transition: Transition.noTransition);
+                if (userData != null && userData!['banner'] != null) {
+                  Get.to(
+                      ImageFullView(
+                        image: userData!['banner'],
+                      ),
+                      transition: Transition.noTransition);
+                }
               },
               child: Container(
-                child: userData!['banner'] != null &&
-                    userData!['banner'].isNotEmpty
-                    ? Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    image: DecorationImage(
-                      image: NetworkImage(
-                          "${ImagebaseUrl}${userData!['banner']}"),
-                      fit: BoxFit.fill,
-                      onError: (exception, stackTrace) =>
-                          Image.asset("assets/images/appbarlogo.png"),
-                    ),
-                  ),
-                )
-                    : Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage("assets/images/appbarlogo.png"),
-                      fit: BoxFit.fill,
-                      alignment: Alignment.center,
-                    ),
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  image: userData != null && userData!['banner'] != null && userData!['banner'].isNotEmpty
+                      ? DecorationImage(
+                    image: NetworkImage("$ImagebaseUrl${userData!['banner']}"),
+                    fit: BoxFit.fill,
+                    onError: (exception, stackTrace) => const AssetImage("assets/images/appbarlogo.png"),
+                  )
+                      : const DecorationImage(
+                    image: AssetImage("assets/images/appbarlogo.png"),
+                    fit: BoxFit.fill,
+                    alignment: Alignment.center,
                   ),
                 ),
               ),
@@ -129,17 +155,20 @@ class _TabProfileState extends State<TabProfile> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey[400],
-                  backgroundImage:
-                  NetworkImage("${ImagebaseUrl}${userData!['photo']}",),
+                  backgroundImage: userData != null && userData!['photo'] != null
+                      ? NetworkImage("$ImagebaseUrl${userData!['photo']}")
+                      : null,
+                  child: userData == null || userData!['photo'] == null
+                      ? const Icon(Icons.person, size: 50, color: Colors.white)
+                      : null,
                 ),
               ),
             ),
           ],
         ),
-        // Rest of the column children remain the same
         const SizedBox(height: 50),
         Text(
-          userData!['name'] ?? "Anonymous Customer",
+          userData?['name'] ?? "Anonymous Customer",
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
@@ -150,14 +179,14 @@ class _TabProfileState extends State<TabProfile> {
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () async {
-            var result = await Get.to(
-              UpdateProfileScreen(userData: userData!),
-              transition: Transition.noTransition,
-            );
-            if (result == true) {
-              setState(() {
+            if (userData != null) {
+              var result = await Get.to(
+                UpdateProfileScreen(userData: userData!),
+                transition: Transition.noTransition,
+              );
+              if (result == true) {
                 fetchProfileData();
-              });
+              }
             }
           },
           style: ElevatedButton.styleFrom(
@@ -223,6 +252,11 @@ class _TabProfileState extends State<TabProfile> {
             "https://girlsparadisebd.com/public/assets/images/icon/badge-outline-filled.svg",
             height: 50,
             width: 70,
+            placeholderBuilder: (BuildContext context) => const Icon(
+              Icons.dashboard,
+              size: 50,
+              color: Colors.grey,
+            ),
           ),
           const SizedBox(height: 20),
           Center(
@@ -259,14 +293,14 @@ class _TabProfileState extends State<TabProfile> {
           ),
           const SizedBox(height: 15),
           _buildInfoRow(
-              Icons.cake_outlined, "Born", "${userData!["dob"] ?? ""}"),
+              Icons.cake_outlined, "Born", userData?["dob"] ?? "Not specified"),
           _buildInfoRow(Icons.favorite_outline_rounded, "Status:", "Active",
               isBold: true),
           _buildInfoRow(
-              Icons.email_outlined, "Email:", "${userData!["email"] ?? ""}",
+              Icons.email_outlined, "Email:", userData?["email"] ?? "Not provided",
               isBold: true),
           _buildInfoRow(Icons.location_on_outlined, "Address",
-              "${userData!["address"] ?? ""}"),
+              userData?["address"] ?? "Not provided"),
           const SizedBox(height: 20),
         ],
       ),
@@ -284,12 +318,14 @@ class _TabProfileState extends State<TabProfile> {
           Text(label,
               style: const TextStyle(fontSize: 16, color: Colors.black)),
           const SizedBox(width: 10),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
         ],
@@ -353,13 +389,26 @@ class _TabProfileState extends State<TabProfile> {
   }
 
   Future logout() async {
-    var response = await http.post(
-        Uri.parse("https://girlsparadisebd.com/api/v1/auth/logout"),
-        headers: {"Authorization": "Bearer $accessToken"});
-    if (response.statusCode == 200) {
-      setState(() {
+    try {
+      var response = await http.post(
+          Uri.parse("https://girlsparadisebd.com/api/v1/auth/logout"),
+          headers: {"Authorization": "Bearer $accessToken"});
+
+      print('Logout Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        setAccessToken("");
         Get.offAll(const HomeScreens(), transition: Transition.noTransition);
-      });
+      } else {
+        // Even if logout API fails, clear local token
+        setAccessToken("");
+        Get.offAll(const HomeScreens(), transition: Transition.noTransition);
+      }
+    } catch (e) {
+      print('Logout error: $e');
+      // Clear token even if there's an error
+      setAccessToken("");
+      Get.offAll(const HomeScreens(), transition: Transition.noTransition);
     }
   }
 
@@ -373,14 +422,24 @@ class _TabProfileState extends State<TabProfile> {
           ? Padding(
         padding: const EdgeInsets.only(left: 58.0, top: 111),
         child: LoadingAnimationWidget.progressiveDots(
-            color: Color(0xFFdc1212), size: 30),
+            color: const Color(0xFFdc1212), size: 30),
       )
           : userData == null
-          ? const Center(child: Text("Failed to load profile"))
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Failed to load profile"),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: fetchProfileData,
+              child: const Text("Retry"),
+            ),
+          ],
+        ),
+      )
           : RefreshIndicator(
-        onRefresh: () async {
-          await fetchProfileData();
-        },
+        onRefresh: fetchProfileData,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -395,19 +454,14 @@ class _TabProfileState extends State<TabProfile> {
                 padding:
                 const EdgeInsets.only(left: 18.0, right: 18),
                 child: GestureDetector(
-                  onTap: () async {
-                    if (accessToken.isNotEmpty) {
-                      setAccessToken("");
-                      await logout();
-                    }
-                  },
+                  onTap: logout,
                   child: Center(
                     child: Container(
                       alignment: Alignment.center,
                       height: 50,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Color(0xFFdc1212),
+                        color: const Color(0xFFdc1212),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
@@ -426,19 +480,14 @@ class _TabProfileState extends State<TabProfile> {
                 padding:
                 const EdgeInsets.only(left: 18.0, right: 18),
                 child: GestureDetector(
-                  onTap: () async {
-                    if (accessToken.isNotEmpty) {
-                      setAccessToken("");
-                      await logout();
-                    }
-                  },
+                  onTap: logout, // You might want to create a separate deleteAccount function
                   child: Center(
                     child: Container(
                       alignment: Alignment.center,
                       height: 50,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Color(0xFFdc1212),
+                        color: const Color(0xFFdc1212),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(

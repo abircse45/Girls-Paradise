@@ -163,7 +163,7 @@ import '../utils/constance.dart';
                                  SizedBox(height: 20,),
                                  GestureDetector(
                                    onTap: (){
-                                     Get.to(const ProfileScreen(),transition: Transition.noTransition);
+                                     Get.to(const HomeScreens(),transition: Transition.noTransition);
                                    },
                                      child: Container(
                                        height: 40,

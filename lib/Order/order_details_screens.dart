@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:creation_edge/Profile/profile_screens.dart';
+import 'package:creation_edge/screens/home/home_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -74,7 +75,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Get.to(const ProfileScreen(), transition: Transition.noTransition);
+            Get.to(const HomeScreens(), transition: Transition.noTransition);
           },
         ),
       ),

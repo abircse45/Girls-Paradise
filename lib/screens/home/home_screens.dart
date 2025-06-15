@@ -1598,7 +1598,7 @@ class _HomeScreensState extends State<HomeScreens>
                                         () => Padding(
                                       padding: const EdgeInsets.only(left: 8.0),
                                       child: Text(
-                                        "${productController.filterProduct!.data!.products?.length} Item Found",
+                                        "${productController.filterProduct?.data!.products?.length??0} Item Found",
                                         style: const TextStyle(
                                             fontSize: 14, color: Colors.black),
                                       ),
