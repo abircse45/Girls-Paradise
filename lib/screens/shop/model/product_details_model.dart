@@ -44,6 +44,7 @@ class Datum {
   String? shortDescription;
   String? longDescription;
   String? shortVideoUrl;
+  String? facebook_video;
   Brand? category;
   Brand? brand;
   Brand? unit;
@@ -62,6 +63,7 @@ class Datum {
     this.shortDescription,
     this.longDescription,
     this.shortVideoUrl,
+    this.facebook_video,
     this.category,
     this.brand,
     this.unit,
@@ -81,6 +83,7 @@ class Datum {
     shortDescription: json["short_description"],
     longDescription: json["long_description"],
     shortVideoUrl: json["short_video_url"],
+    facebook_video: json["facebook_video"],
     category: json["category"] == null ? null : Brand.fromJson(json["category"]),
     brand: json["brand"] == null ? null : Brand.fromJson(json["brand"]),
     unit: json["unit"] == null ? null : Brand.fromJson(json["unit"]),
@@ -100,6 +103,7 @@ class Datum {
     "short_description": shortDescription,
     "long_description": longDescription,
     "short_video_url": shortVideoUrl,
+    "facebook_video": facebook_video,
     "category": category?.toJson(),
     "brand": brand?.toJson(),
     "unit": unit?.toJson(),

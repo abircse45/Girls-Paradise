@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => accessToken.isEmpty
-            ? const SplashScreens()
+            ? const HomeScreens()
             : const HomeScreens(),
         '/notification': (context) => const Pushnotifyappbarscreen(), // Replace with your notification screen
       },

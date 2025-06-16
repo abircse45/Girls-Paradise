@@ -328,7 +328,7 @@ class CreationEdgePage extends StatelessWidget {
           // Background image
           Positioned.fill(
             child: Image.asset(
-              "assets/images/backgroundbottom.jpg", // Add your background image
+              "assets/images/cover.jpg", // Add your background image
               fit: BoxFit.cover,
               width: double.infinity,
             ),

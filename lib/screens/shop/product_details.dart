@@ -12,6 +12,7 @@ import '../../Cart/cart_controller.dart';
 import '../../Cart/cart_screen.dart';
 import '../../NativeServices/native_messenger_launcher.dart';
 import '../../WishList/wishList_screen.dart';
+import '../../facebbook/facebook.dart';
 import '../../search/search_screen.dart';
 import '../Arraival/controller.dart';
 import '../Trending/controller.dart';
@@ -194,33 +195,58 @@ class _ProductDetailsState extends State<ProductDetails>
     }
   }
 
-
+  String getFacebookVideoEmbed(String facebookVideoId) {
+    print("id${facebookVideoId}");
+    return '''
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+      <iframe src="https://www.facebook.com/GirlsParadiseBD/videos/${facebookVideoId}" 
+              width="560" 
+              height="314" 
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:none;overflow:hidden" 
+              scrolling="no" 
+              frameborder="0" 
+              allowfullscreen="true" 
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+      </iframe>
+    </div>
+  ''';
+  }
 
   String? shortVideoUrl;
-
   Widget buildMediaSection(dynamic product) {
-    if (isPlayingVideo && product.shortVideoUrl != null) {
-      return SizedBox(
-        height: 300,
-        child: YoutubePlayer(
-          controller: _youtubeController!,
-          showVideoProgressIndicator: true,
-          progressIndicatorColor: Colors.red,
-        ),
-      );
+    if (isPlayingVideo && product.facebook_video != null) {
+      return FacebookVideoPlayer(facebookVideoId: product.facebook_video!);
     } else {
-      return SizedBox(
-        width: double.infinity,
-        child: CachedNetworkImage(
-          imageUrl: "${ImagebaseUrl}${selectedImage ?? product.defaultImage}",
-          fit: BoxFit.cover,
-          errorWidget: (context, error, stackTrace) =>
-              const Icon(Icons.image_not_supported, size: 100),
-        ),
+      return CachedNetworkImage(
+        imageUrl: "${ImagebaseUrl}${selectedImage ?? product.defaultImage}",
+        fit: BoxFit.cover,
       );
     }
   }
 
+  // Widget buildMediaSection(dynamic product) {
+  //   if (isPlayingVideo && product.shortVideoUrl != null) {
+  //     return SizedBox(
+  //       height: 300,
+  //       child: YoutubePlayer(
+  //         controller: _youtubeController!,
+  //         showVideoProgressIndicator: true,
+  //         progressIndicatorColor: Colors.red,
+  //       ),
+  //     );
+  //   } else {
+  //     return SizedBox(
+  //       width: double.infinity,
+  //       child: CachedNetworkImage(
+  //         imageUrl: "${ImagebaseUrl}${selectedImage ?? product.defaultImage}",
+  //         fit: BoxFit.cover,
+  //         errorWidget: (context, error, stackTrace) =>
+  //             const Icon(Icons.image_not_supported, size: 100),
+  //       ),
+  //     );
+  //   }
+  // }
+// Update the buildThumbnailsSection method:
   Widget buildThumbnailsSection(dynamic product, List<Variant> variants) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -228,22 +254,20 @@ class _ProductDetailsState extends State<ProductDetails>
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            if (product.shortVideoUrl != null)
+            if (product.facebook_video != null)
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
                       isPlayingVideo = true;
-                      initializeYoutubePlayer(product.shortVideoUrl!);
                     });
                   },
                   child: Container(
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color:
-                            isPlayingVideo ? Colors.red : Colors.grey.shade300,
+                        color: isPlayingVideo ? Colors.red : Colors.grey.shade300,
                         width: 2,
                       ),
                     ),
@@ -251,17 +275,17 @@ class _ProductDetailsState extends State<ProductDetails>
                       alignment: Alignment.center,
                       children: [
                         CachedNetworkImage(
-                         imageUrl:  "https://img.youtube.com/vi/${product.shortVideoUrl}/0.jpg",
+                          imageUrl: "${ImagebaseUrl}${product.defaultImage}",
                           height: 60,
                           width: 60,
                           fit: BoxFit.cover,
                           errorWidget: (context, error, stackTrace) =>
                               Container(
-                            height: 60,
-                            width: 60,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported),
-                          ),
+                                height: 60,
+                                width: 60,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image_not_supported),
+                              ),
                         ),
                         const Icon(
                           Icons.play_circle_fill,
@@ -275,55 +299,155 @@ class _ProductDetailsState extends State<ProductDetails>
               ),
             ...variants
                 .map((Variant variant) => GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedPrice = variant.salePrice;
-                          selectedDiscountedPrice = variant.discount;
-                          defaultOldPrice = variant.oldPrice;
-                          orderLimit = variant.orderLimit;
-                          selectedImage = variant.image;
-                          selectedVariantColor = variant.color;
-                          selectedVariantSize = variant.size;
-                          selectvarientId = variant.id;
-                          isPlayingVideo = false;
-                          if (_youtubeController != null) {
-                            _youtubeController!.pause();
-                          }
-                        });
-                        quantity= 1;
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: selectedImage == variant.image &&
-                                    !isPlayingVideo
-                                ? Colors.red
-                                : Colors.grey.shade300,
-                            width: 2,
-                          ),
-                        ),
-                        child: CachedNetworkImage(
-                          imageUrl: "${ImagebaseUrl}${variant.image}",
-                          height: 60,
-                          width: 60,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, error, stackTrace) =>
-                              Container(
-                            height: 60,
-                            width: 60,
-                            color: Colors.grey[300],
-                            child: const Icon(Icons.image_not_supported),
-                          ),
-                        ),
+              onTap: () {
+                setState(() {
+                  selectedPrice = variant.salePrice;
+                  selectedDiscountedPrice = variant.discount;
+                  defaultOldPrice = variant.oldPrice;
+                  orderLimit = variant.orderLimit;
+                  selectedImage = variant.image;
+                  selectedVariantColor = variant.color;
+                  selectedVariantSize = variant.size;
+                  selectvarientId = variant.id;
+                  isPlayingVideo = false;
+                });
+                quantity = 1;
+              },
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: selectedImage == variant.image &&
+                        !isPlayingVideo
+                        ? Colors.red
+                        : Colors.grey.shade300,
+                    width: 2,
+                  ),
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: "${ImagebaseUrl}${variant.image}",
+                  height: 60,
+                  width: 60,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, error, stackTrace) =>
+                      Container(
+                        height: 60,
+                        width: 60,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image_not_supported),
                       ),
-                    ))
+                ),
+              ),
+            ))
                 .toList(),
           ],
         ),
       ),
     );
   }
+  // Widget buildThumbnailsSection(dynamic product, List<Variant> variants) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+  //     child: SingleChildScrollView(
+  //       scrollDirection: Axis.horizontal,
+  //       child: Row(
+  //         children: [
+  //           if (product.shortVideoUrl != null)
+  //             Padding(
+  //               padding: const EdgeInsets.only(left: 8.0),
+  //               child: GestureDetector(
+  //                 onTap: () {
+  //                   setState(() {
+  //                     isPlayingVideo = true;
+  //                     initializeYoutubePlayer(product.shortVideoUrl!);
+  //                   });
+  //                 },
+  //                 child: Container(
+  //                   margin: const EdgeInsets.only(right: 8),
+  //                   decoration: BoxDecoration(
+  //                     border: Border.all(
+  //                       color:
+  //                           isPlayingVideo ? Colors.red : Colors.grey.shade300,
+  //                       width: 2,
+  //                     ),
+  //                   ),
+  //                   child: Stack(
+  //                     alignment: Alignment.center,
+  //                     children: [
+  //                       CachedNetworkImage(
+  //                        imageUrl:  "https://img.youtube.com/vi/${product.shortVideoUrl}/0.jpg",
+  //                         height: 60,
+  //                         width: 60,
+  //                         fit: BoxFit.cover,
+  //                         errorWidget: (context, error, stackTrace) =>
+  //                             Container(
+  //                           height: 60,
+  //                           width: 60,
+  //                           color: Colors.grey[300],
+  //                           child: const Icon(Icons.image_not_supported),
+  //                         ),
+  //                       ),
+  //                       const Icon(
+  //                         Icons.play_circle_fill,
+  //                         color: Colors.white,
+  //                         size: 24,
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ...variants
+  //               .map((Variant variant) => GestureDetector(
+  //                     onTap: () {
+  //                       setState(() {
+  //                         selectedPrice = variant.salePrice;
+  //                         selectedDiscountedPrice = variant.discount;
+  //                         defaultOldPrice = variant.oldPrice;
+  //                         orderLimit = variant.orderLimit;
+  //                         selectedImage = variant.image;
+  //                         selectedVariantColor = variant.color;
+  //                         selectedVariantSize = variant.size;
+  //                         selectvarientId = variant.id;
+  //                         isPlayingVideo = false;
+  //                         if (_youtubeController != null) {
+  //                           _youtubeController!.pause();
+  //                         }
+  //                       });
+  //                       quantity= 1;
+  //                     },
+  //                     child: Container(
+  //                       margin: const EdgeInsets.only(right: 8),
+  //                       decoration: BoxDecoration(
+  //                         border: Border.all(
+  //                           color: selectedImage == variant.image &&
+  //                                   !isPlayingVideo
+  //                               ? Colors.red
+  //                               : Colors.grey.shade300,
+  //                           width: 2,
+  //                         ),
+  //                       ),
+  //                       child: CachedNetworkImage(
+  //                         imageUrl: "${ImagebaseUrl}${variant.image}",
+  //                         height: 60,
+  //                         width: 60,
+  //                         fit: BoxFit.cover,
+  //                         errorWidget: (context, error, stackTrace) =>
+  //                             Container(
+  //                           height: 60,
+  //                           width: 60,
+  //                           color: Colors.grey[300],
+  //                           child: const Icon(Icons.image_not_supported),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ))
+  //               .toList(),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Future<void> _launchMessengerAppbar() async {
     await NativeMessengerLauncher.launchMessenger();
   }
